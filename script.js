@@ -7,7 +7,9 @@
       "gameOver"     : "gameOver",     // -> goto splash or playing (buttons)
       "credits"      : "credits",      // -> goto splash screen
   };
-  let gameState = ({});
+  let gameState = ({
+    
+  });
 
   let resetGame = () => {
     gameState.screen     = screens.splash;
@@ -223,6 +225,8 @@
   }
 
 //-- card actions ----------
+  let cardAspect = 1668/2388;
+
   let actions = {
     "up" : 1,
     "down" : 2,
@@ -237,16 +241,30 @@
   //need to 
   class Card{
     constructor(){
-      this.hairIdx = random();
-      this.browIdx = random();
-      this.eyesIdx = random();
-      this.noseIdx = random();
-      this.mouthIdx = random();
+      this.indexes = numImgs.map(i => rInt(i));
       this.hits = []; //list of points rendered from player position
       this.numMoves = 0;
     }
-    render(){
-      
+    render(x, y, w, h){
+      pushPop(() => {
+        translate(x, y);
+
+        for (let i = 0; i < this.indexes.length; i++){
+          let name = imgNames[i];
+          let idx  = this.indexes[i];
+          let img  = assetMap[name][idx];
+          let [w2, h2] = [w, h];
+
+          pushPop(() => {
+            if (i != 0){
+              translate(w*.1, h*.14);
+              w2 *= .8;
+              h2 *= .7;
+            }
+            image(img, 0, 0, w2, h2);
+          });
+        }
+      });
     }
   }
 
@@ -278,31 +296,45 @@
   let infoArea   = new Rect(660, 0, 140, 350);
 
 //-- asset loading ------------------------------------
-  let assets = {
-    images : [],
-  }
 
+  let assetMap = {};
+  let imgNames = ["card", "skin", "eyes", "lip", "nose", "eyebrow", "hair"];
+  let numImgs  = [3, 3, 8, 8, 8, 8, 8];
+  
   function preload(){
     //load assets here loadImage
+    for(n = 0; n < imgNames.length; n++){
+      let name = imgNames[n];
+      assetMap[name] = [];
 
+      let len = numImgs[n];
+      for(let i=0; i < len; i++){  
+        let img = loadImage('/assets/images/'+name+'_'+(i+1)+'.png');
+        assetMap[name].push(img);
+      }
+    }
   }
 
 //-- p5.js drawing ------------------------------------
   function setup (){
-    pixelDensity(1);
+    pixelDensity(2);
     createCanvas();
     colorMode(HSB, 1, 1, 1);
     windowResized();
   }
 
-  let maze
+  let maze;
+  let cards;
   let init = () => {
     maze = new Maze(0);
+    cards = [];
+    for (let i = 0; i < 20; i++){
+      cards.push(new Card());
+    }
     resetGame();
   }
 
-  function draw(){
-    background(0);
+  function drawBoard(){
     effectiveScale = 1;
     
     //letterbox the boar
@@ -330,6 +362,32 @@
     maze.render();
   }
 
+  function drawCards(){
+    // for(let i=0; i < imgNames.length; i++){      
+    //   let name = imgNames[i];
+    //   let len = assetMap[name].length;
+    //   for(let j=0; j < len; j++){
+    //     let img = assetMap[name][j];
+    //     image(img, 0*200, j*300, 200, 300);
+    //   }
+    // }
+    for (let i = 0; i < cards.length; i++){
+      let card = cards[i];
+      let stride = 10;
+      let x = i%stride;
+      let y = floor(i/stride);
+      let w = 400; let h = 600;
+      card.render(x*w, y*h, w, h);
+    }
+  }
+
+
+  function draw(){
+    background(1);
+    //drawBoard();
+    drawCards();
+  }
+
   function windowResized(){
     resizeCanvas(windowWidth, windowHeight);
     init();
@@ -337,7 +395,7 @@
 
   function keyPressed(){
     gameState.level++;
-    maze = new Maze(gameState.level);
+    init();
   }
   
 //-- p5.js helper functions ----------------

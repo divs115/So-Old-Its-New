@@ -1,0 +1,1 @@
+let suffixes = ["ius", "axle", "us", "mur", "ada", "ala", "ia", "o", "a", "sie", ""]
